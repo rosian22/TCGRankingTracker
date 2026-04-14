@@ -8,7 +8,11 @@
       "Bash(git --version)",
       "Bash(npm install:*)",
       "Bash(npx prisma:*)",
-      "Bash(npx shadcn@latest init -d)"
+      "Bash(npx shadcn@latest init -d)",
+      "Bash(npx shadcn@latest add table card input label select separator badge sheet sidebar dropdown-menu dialog form textarea tabs tooltip avatar -y)",
+      "Bash(docker compose:*)",
+      "Bash(npx next:*)",
+      "Bash(ls D:/AI/TCGRankingTracker/src/generated/prisma/index*)"
     ]
   }
 }
