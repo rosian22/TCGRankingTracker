@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx create-next-app@latest . --typescript --tailwind --eslint --app --src-dir --import-alias \"@/*\" --use-npm --turbopack)",
+      "Bash(cp -r D:/AI/tcg-ranking-tracker/* D:/AI/TCGRankingTracker/)",
+      "Bash(cp D:/AI/tcg-ranking-tracker/.gitignore D:/AI/TCGRankingTracker/)",
+      "Bash(gh auth:*)",
+      "Bash(git --version)"
+    ]
+  }
+}
