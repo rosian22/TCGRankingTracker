@@ -1,0 +1,169 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Color {
+  RED
+  GREEN
+  BLUE
+  PURPLE
+  BLACK
+  YELLOW
+}
+
+enum CardType {
+  LEADER
+  CHARACTER
+  EVENT
+  STAGE
+}
+
+// ─── Players ───────────────────────────────────────────────
+
+model Player {
+  id               String   @id @default(cuid())
+  name             String
+  nickname         String?
+  membershipNumber String?  @unique
+  notes            String?
+  isActive         Boolean  @default(true)
+  eloRating        Float    @default(1500)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  eventEntries EventEntry[]
+  matchesWon   Match[]      @relation("Winner")
+  decklists    Decklist[]
+}
+
+// ─── Leaders ───────────────────────────────────────────────
+
+model Leader {
+  id          String  @id @default(cuid())
+  cardNumber  String  @unique
+  name        String
+  color       Color
+  secondColor Color?
+  power       Int
+  life        Int
+  traits      String
+  imageUrl    String?
+  setCode     String
+
+  eventEntries EventEntry[]
+  decklists    Decklist[]
+}
+
+// ─── Events ────────────────────────────────────────────────
+
+model Event {
+  id          String    @id @default(cuid())
+  name        String
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  format      String    @default("CONSTRUCTED")
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  entries EventEntry[]
+  matches Match[]
+}
+
+// ─── Event Entries (player participation in an event) ──────
+
+model EventEntry {
+  id         String  @id @default(cuid())
+  event      Event   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId    String
+  player     Player  @relation(fields: [playerId], references: [id])
+  playerId   String
+  leader     Leader? @relation(fields: [leaderId], references: [id])
+  leaderId   String?
+  decklist   Decklist? @relation(fields: [decklistId], references: [id])
+  decklistId String?
+
+  // Standings data (from CSV import or manual entry)
+  standing    Int?
+  winPoints   Int?
+  omwPercent  Float?
+  oomwPercent Float?
+
+  createdAt DateTime @default(now())
+
+  matchesAsPlayer1 Match[] @relation("Player1Entry")
+  matchesAsPlayer2 Match[] @relation("Player2Entry")
+
+  @@unique([eventId, playerId])
+}
+
+// ─── Matches ───────────────────────────────────────────────
+
+model Match {
+  id           String     @id @default(cuid())
+  event        Event      @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId      String
+  player1Entry EventEntry @relation("Player1Entry", fields: [player1EntryId], references: [id])
+  player1EntryId String
+  player2Entry EventEntry @relation("Player2Entry", fields: [player2EntryId], references: [id])
+  player2EntryId String
+  winner       Player?    @relation("Winner", fields: [winnerId], references: [id])
+  winnerId     String?
+  isDraw       Boolean    @default(false)
+  roundNumber  Int?
+  notes        String?
+  createdAt    DateTime   @default(now())
+}
+
+// ─── Cards (full card database) ────────────────────────────
+
+model Card {
+  id         String   @id @default(cuid())
+  cardNumber String   @unique
+  name       String
+  color      Color
+  type       CardType
+  cost       Int?
+  power      Int?
+  counter    Int?
+  traits     String?
+  effect     String?
+  imageUrl   String?
+  setCode    String
+
+  decklistCards DecklistCard[]
+}
+
+// ─── Decklists ─────────────────────────────────────────────
+
+model Decklist {
+  id          String   @id @default(cuid())
+  name        String?
+  player      Player   @relation(fields: [playerId], references: [id])
+  playerId    String
+  leader      Leader   @relation(fields: [leaderId], references: [id])
+  leaderId    String
+  importedRaw String?
+  createdAt   DateTime @default(now())
+
+  cards       DecklistCard[]
+  eventEntries EventEntry[]
+}
+
+model DecklistCard {
+  id         String   @id @default(cuid())
+  decklist   Decklist @relation(fields: [decklistId], references: [id], onDelete: Cascade)
+  decklistId String
+  card       Card     @relation(fields: [cardId], references: [id])
+  cardId     String
+  quantity   Int      @default(1)
+
+  @@unique([decklistId, cardId])
+}
